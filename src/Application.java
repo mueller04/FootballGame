@@ -1,23 +1,45 @@
+import java.util.Map;
 
 public class Application {
 
     public static void main(String[] args) {
 
         //declare variables
-        Team team1 = new Team();
-        Team team2 = new Team();
+        Team offense;
+        Team defense;
+
         PlayAction playAction = new PlayAction();
 
         //set values
-        team1.teamName = "browns";
-        team2.teamName = "steelers";
+        Map<String, Team> teamList = playAction.coinToss("browns", "steelers");
+        offense = teamList.get("OFFENSE");
+        defense = teamList.get("DEFENSE");
 
+        boolean gameOver = false;
+        while (!gameOver) {
 
-        playAction.coinToss(team1, team2);
+            if (offense.score < 30 || defense.score < 30) {
 
-        playAction.punt(team1, team2);
+                playAction.punt(offense);
 
+                boolean stillHasPossession = true;
 
+                while (stillHasPossession == true) {
+                    stillHasPossession = playAction.play(offense);
+                }
+
+                teamList = playAction.turnover(offense, defense);
+                offense = teamList.get("OFFENSE");
+                defense = teamList.get("DEFENSE");
+
+            } else {
+                gameOver = true;
+                System.out.println("The Game is Over");
+            }
+        }
     }
 
 }
+
+
+
