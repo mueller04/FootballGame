@@ -6,107 +6,90 @@ public class PlayAction {
     final static int MAXIMUM_YARDS_TO_PUNT = 70;
     final static int MINIMUM_YARDS_TO_PUNT = 40;
 
-    Play play;
+    Posession posession;
+    Team offense;
+    Team defense;
 
-    Map<String, Team> coinToss(String teamName1, String teamName2){
-
-        Team offense = new Team();
-        Team defense = new Team();
-        offense.teamName = "Browns";
-        defense.teamName = "Steelers";
-
-        Random random = new Random();
-        int n = random.nextInt(10);
-        if (n > 5) {
-            System.out.println("team: " + offense.teamName + " have possession");
-
-        } else {
-            Team temporary = new Team();
-
-            temporary = offense;
-
-            offense = defense;
-
-            defense = temporary;
-
-            System.out.println("team: " + offense.teamName + " have possession");
-        }
-
-        Map<String, Team> teams = new HashMap<String, Team>();
-        teams.put("OFFENSE", offense);
-        teams.put("DEFENSE", defense);
-        return teams;
+    public PlayAction(Team offense, Team defense) {
+        this.offense = offense;
+        this.defense = defense;
     }
 
-    void punt(Team offense){
-
+    void kickoff(){
         Random random = new Random();
         int yardsKicked = random.nextInt(MAXIMUM_YARDS_TO_PUNT - MINIMUM_YARDS_TO_PUNT) + MINIMUM_YARDS_TO_PUNT;
 
-          offense.totalYardsUntilGoal = yardsKicked;
-            System.out.println("team " + offense.teamName + " received punt, " + offense.totalYardsUntilGoal + " to go");
+        offense.totalYardsUntilGoal = yardsKicked;
+        System.out.println(offense.teamName + " received punt, " + offense.totalYardsUntilGoal + " to go");
     }
 
-    boolean play(Team offense){
+    void punt() {
+        turnover();
+        kickoff();
+    }
 
-        play = new Play();
-        int down = 1;
+    void play(){
+
+        posession = new Posession();
+        PlayResult.ResultType result;
 
         do  {
-            play.playDown(offense);
 
-            if (gotATouchDown(offense)) {
-                return false;
+            try {
+            Thread.sleep(2000);
+            } catch (Exception e){
+                System.out.println("Exception " + e);
             }
 
-            if (gotTheFirstDown()) {
-                return true;
-            }
+            result = posession.playPosession(offense, defense);
 
-            down = down + 1;
+        } while (posession.down < 5 && result == PlayResult.ResultType.CONTINUE && !checkForTouchDown());
 
-        } while (down < 5);
-
-            return false;
-
-    }
-
-    boolean gotTheFirstDown(){
-        if (play.yardsUntilFirstDown <= 0) {
-            play.yardsUntilFirstDown = 10;
-            return true;
-        }  else {
-            return false;
+        if (result == PlayResult.ResultType.PUNT) {
+            punt();
+        } else if (result == PlayResult.ResultType.TURNOVERONDOWNS) {
+            turnOverOnDowns();
         }
     }
 
-    boolean gotATouchDown(Team offense){
+    public void turnOverOnDowns() {
+        System.out.println("Turnover On Downs at the " + offense.totalYardsUntilGoal + " yard line.\n");
+        defense.totalYardsUntilGoal = 100 - offense.totalYardsUntilGoal;
+        System.out.println(defense.teamName + " are starting with " + defense.totalYardsUntilGoal + " yards to go");
+        turnover();
+
+        try {
+            Thread.sleep(2000);
+        } catch (Exception e){
+            System.out.println("Exception " + e);
+        }
+    }
+
+
+    boolean checkForTouchDown(){
 
         if (offense.totalYardsUntilGoal <= 0){
             offense.score = offense.score + 6;
 
-            System.out.println(offense.teamName + " got a touch down");
-            System.out.println(offense.teamName + " has " + offense.score + " points");
-
+            System.out.println("TOUCHDOWN " + offense.teamName + "!\n");
+            System.out.println(offense.teamName + " have " + offense.score + " points\n");
+            punt();
             return true;
         } else {
             return false;
         }
+
     }
 
-    Map<String, Team> turnover(Team offense, Team defense) {
-        Team temporary = new Team();
+    void turnover() {
 
-        temporary = offense;
-
-        offense = defense;
-
-        defense = temporary;
-
-        Map<String, Team> teams = new HashMap<String, Team>();
-        teams.put("OFFENSE", offense);
-        teams.put("DEFENSE", defense);
-        return teams;
+        Team temporary = this.defense;
+        this.defense = offense;
+        this.offense = temporary;
     }
+
+
+
+
 
 }
